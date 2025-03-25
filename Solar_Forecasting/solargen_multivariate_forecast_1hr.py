@@ -42,12 +42,8 @@ df = load_data(file_path)
 print(df.head())
 
 print(df.index.isna().sum())
-
-#
 df = df[~df.index.isna()]
 
-
-# %%
 '''
 Visualize solar generation time series
 '''
@@ -60,8 +56,6 @@ plt.ylabel('Solar Generation (MW)')
 plt.grid(True)
 plt.show()
 
-
-# %%
 '''
 Split data into training and testing based on date
 '''
@@ -76,8 +70,6 @@ test_df = df.loc[test_start_date:test_end_date]
 print("\nTraining Data Shape:", train_df.shape)
 print("\nTesting Data Shape:", test_df.shape)
 
-
-# %%
 '''
 Scale the data using MinMaxScaler
 '''
@@ -130,7 +122,6 @@ model.add(Dense(1)) # Adjust the number of output neurons to match the number of
 model.compile(optimizer='adam', loss='mse')
 model.summary()
 
-# %%
 # Define early stopping
 early_stopping = EarlyStopping(monitor='val_loss', patience=5)
 # Fit the model with the specified parameters
@@ -141,7 +132,6 @@ history = model.fit(X_train, y_train,
 # Save the model
 model.save('solargen_multivariate_forecast_1hr_model.keras')
 
-# %%
 # Plot training & validation loss values
 plt.figure(figsize=(10, 5))
 plt.plot(history.history['loss'], label='Training Loss')
@@ -152,8 +142,6 @@ plt.ylabel('Loss')
 plt.legend(['Train', 'Validation'])
 plt.show()
 
-
-# %%
 # Make predictions
 train_prediction = model.predict(X_train)
 test_prediction = model.predict(X_test)
@@ -161,15 +149,6 @@ test_prediction = model.predict(X_test)
 print("\nShapes of Predictions:")
 print("train_prediction shape:", train_prediction.shape)
 print("test_prediction shape:", test_prediction.shape)
-
-# %%
-# test_prediction_copies = np.repeat(test_prediction, test_df.shape[1], axis=-1)
-# print(test_prediction_copies.shape)
-
-# test_prediction_inv = scaler.inverse_transform(np.reshape(test_prediction_copies, (len(test_prediction_copies), test_df.shape[1])))[:,0]
-
-# y_test_inv = np.repeat(y_test, test_df.shape[1], axis=-1)
-# y_test_inv = scaler.inverse_transform(np.reshape(y_test_inv, (len(y_test), test_df.shape[1])))[:,0]
 
 train_prediction_inv = scaler.inverse_transform(np.concatenate((train_prediction, np.zeros((len(train_prediction), test_df.shape[1] - 1))), axis=1))[:,0]
 test_prediction_inv = scaler.inverse_transform(np.concatenate((test_prediction, np.zeros((len(test_prediction), test_df.shape[1] - 1))), axis=1))[:,0]
@@ -182,9 +161,6 @@ print("train_prediction_inv shape:", train_prediction_inv.shape)
 print("test_prediction_inv shape:", test_prediction_inv.shape)
 print("y_test_inv shape:", y_test_inv.shape)
 
-
-
-# %%
 # Calculate metrics
 train_rmse = np.sqrt(mean_squared_error(y_train_inv, train_prediction_inv))
 test_rmse = np.sqrt(mean_squared_error(y_test_inv, test_prediction_inv))
@@ -213,8 +189,6 @@ print("| MAE       | {:.2f}      | {:.2f}     |".format(train_mae, test_mae))
 print("| R2 Score  | {:.2f}      | {:.2f}     |".format(r2_score_train, r2_score_test))
 print("-------------------------------------------------")
 
-
-# %%
 test_timestamps = test_df.index[n_past:]
 
 # Plot Actual vs Predicted
@@ -227,11 +201,9 @@ plt.ylabel('PJME_MW')
 plt.legend()
 plt.show()
 
-# %%
 result_df = pd.DataFrame({'TimeStamp': test_timestamps, 
                           'Actual': y_test_inv, 
                           'Predicted': test_prediction_inv})
 
 result_df.to_csv('solargen_multivariate_forecast_1hr_results.csv', index=False)
 
-# %%
